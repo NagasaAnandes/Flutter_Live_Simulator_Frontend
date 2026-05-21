@@ -15,20 +15,35 @@ class RoomLoading extends RoomState {
   const RoomLoading();
 }
 
-class RoomJoined extends RoomState {
-  final String roomId;
+class RoomConnected extends RoomState {
+  final RoomData roomData;
+  final ConnectionStatus connectionStatus;
+  final bool isReconnecting;
 
-  const RoomJoined(this.roomId);
+  const RoomConnected({
+    required this.roomData,
+    required this.connectionStatus,
+    this.isReconnecting = false,
+  });
 
   @override
-  List<Object?> get props => [roomId];
+  List<Object?> get props => [roomData, connectionStatus, isReconnecting];
 }
 
-class RoomError extends RoomState {
-  final String message;
+class RoomReconnecting extends RoomState {
+  final RoomData? lastKnown;
 
-  const RoomError(this.message);
+  const RoomReconnecting({this.lastKnown});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [lastKnown];
+}
+
+class RoomErrorState extends RoomState {
+  final RoomError error;
+
+  const RoomErrorState(this.error);
+
+  @override
+  List<Object?> get props => [error];
 }

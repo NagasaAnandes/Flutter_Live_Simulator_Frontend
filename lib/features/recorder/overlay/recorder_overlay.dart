@@ -7,7 +7,7 @@
 import 'package:flutter/material.dart';
 
 class RecorderOverlay extends StatelessWidget {
-  const RecorderOverlay({Key? key}) : super(key: key);
+  const RecorderOverlay({super.key});
 
   @override
   Widget build(BuildContext context) {

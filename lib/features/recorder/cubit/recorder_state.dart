@@ -1,43 +1,65 @@
 part of 'recorder_cubit.dart';
 
-abstract class RecorderState extends Equatable {
+@immutable
+abstract class RecorderState {
   const RecorderState();
-
-  @override
-  List<Object?> get props => [];
 }
 
 class RecorderInitial extends RecorderState {
   const RecorderInitial();
 }
 
+class RecorderLoading extends RecorderState {
+  const RecorderLoading();
+}
+
 class RecorderReady extends RecorderState {
-  const RecorderReady();
-}
+  final CameraController? controller;
+  final CameraDescription? activeCamera;
+  final bool overlaysVisible;
+  final List<CommentOverlayItem> comments;
+  final String statusText;
 
-class RecorderRecording extends RecorderState {
-  final Duration elapsed;
+  const RecorderReady({
+    this.controller,
+    this.activeCamera,
+    this.overlaysVisible = true,
+    this.comments = const [],
+    this.statusText = 'Ready',
+  });
 
-  const RecorderRecording(this.elapsed);
-
-  @override
-  List<Object?> get props => [elapsed];
-}
-
-class RecorderPaused extends RecorderState {
-  final Duration elapsed;
-
-  const RecorderPaused(this.elapsed);
-
-  @override
-  List<Object?> get props => [elapsed];
+  RecorderReady copyWith({
+    CameraController? controller,
+    CameraDescription? activeCamera,
+    bool? overlaysVisible,
+    List<CommentOverlayItem>? comments,
+    String? statusText,
+  }) {
+    return RecorderReady(
+      controller: controller ?? this.controller,
+      activeCamera: activeCamera ?? this.activeCamera,
+      overlaysVisible: overlaysVisible ?? this.overlaysVisible,
+      comments: comments ?? this.comments,
+      statusText: statusText ?? this.statusText,
+    );
+  }
 }
 
 class RecorderError extends RecorderState {
   final String message;
 
   const RecorderError(this.message);
+}
 
-  @override
-  List<Object?> get props => [message];
+@immutable
+class CommentOverlayItem {
+  final String id;
+  final String text;
+  final DateTime createdAt;
+
+  const CommentOverlayItem({
+    required this.id,
+    required this.text,
+    required this.createdAt,
+  });
 }

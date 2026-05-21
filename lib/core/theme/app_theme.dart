@@ -1,12 +1,12 @@
-/// Application Theme Configuration
-///
-/// Responsibility:
-/// - Defines visual design system
-/// - Provides dark livestream/commerce UI
-/// - Maintains consistent typography
-/// - Ensures visual hierarchy
-///
-/// Modern, clean aesthetic optimized for livestream commerce.
+// Application Theme Configuration
+//
+// Responsibility:
+// - Defines visual design system
+// - Provides dark livestream/commerce UI
+// - Maintains consistent typography
+// - Ensures visual hierarchy
+//
+// Modern, clean aesthetic optimized for livestream commerce.
 
 import 'package:flutter/material.dart';
 
@@ -137,7 +137,7 @@ class AppTheme {
       ),
 
       // Card theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

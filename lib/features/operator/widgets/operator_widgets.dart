@@ -7,7 +7,7 @@
 import 'package:flutter/material.dart';
 
 class OperatorPanel extends StatelessWidget {
-  const OperatorPanel({Key? key}) : super(key: key);
+  const OperatorPanel({super.key});
 
   @override
   Widget build(BuildContext context) {

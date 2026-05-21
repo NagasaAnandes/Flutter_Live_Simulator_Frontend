@@ -8,7 +8,7 @@
 import 'package:flutter/material.dart';
 
 class CommenterScreen extends StatelessWidget {
-  const CommenterScreen({Key? key}) : super(key: key);
+  const CommenterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

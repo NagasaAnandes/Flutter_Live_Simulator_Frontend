@@ -1,47 +1,69 @@
-/// App Router Configuration
-///
-/// Responsibility:
-/// - Defines all application routes
-/// - Manages navigation paths and parameters
-/// - Provides named route references
-/// - Centralizes routing logic
-///
-/// Routes are feature-oriented to support scalability.
+// App Router Configuration
+//
+// Responsibility:
+// - Defines all application routes
+// - Manages navigation paths and parameters
+// - Provides named route references
+// - Centralizes routing logic
+//
+// Routes are feature-oriented to support scalability.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Placeholder screens - replace with actual screen imports
+import '../dependency_injection/injection.dart';
+import '../../features/room/screens/waiting_room_screen.dart';
+import '../../features/recorder/screens/recorder_screen.dart';
+import '../../features/recorder/cubit/recorder_cubit.dart';
+
+/// Placeholder screens - replace with actual screen imports when available
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Home Screen')));
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ElevatedButton(
+            onPressed: () => context.go('/recorder'),
+            child: const Text('Recorder'),
+          ),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () => context.go('/operator'),
+            child: const Text('Operator'),
+          ),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () => context.go('/commenter'),
+            child: const Text('Commenter'),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
-class RecorderScreen extends StatelessWidget {
-  const RecorderScreen({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Recorder Screen')));
-}
+// RecorderScreen is provided by the Recorder feature implementation.
 
 class OperatorScreen extends StatelessWidget {
-  const OperatorScreen({Key? key}) : super(key: key);
+  const OperatorScreen({super.key});
   @override
   Widget build(BuildContext context) =>
       const Scaffold(body: Center(child: Text('Operator Screen')));
 }
 
 class CommenterScreen extends StatelessWidget {
-  const CommenterScreen({Key? key}) : super(key: key);
+  const CommenterScreen({super.key});
   @override
   Widget build(BuildContext context) =>
       const Scaffold(body: Center(child: Text('Commenter Screen')));
 }
 
 class JoinRoomScreen extends StatelessWidget {
-  const JoinRoomScreen({Key? key}) : super(key: key);
+  const JoinRoomScreen({super.key});
   @override
   Widget build(BuildContext context) =>
       const Scaffold(body: Center(child: Text('Join Room Screen')));
@@ -78,8 +100,18 @@ final appRouter = GoRouter(
     GoRoute(
       path: RoutePaths.recorder,
       name: 'recorder',
+      builder: (BuildContext context, GoRouterState state) {
+        return BlocProvider<RecorderCubit>(
+          create: (_) => getIt<RecorderCubit>()..initialize(),
+          child: const RecorderScreen(),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/waiting-room',
+      name: 'waitingRoom',
       builder: (BuildContext context, GoRouterState state) =>
-          const RecorderScreen(),
+          const WaitingRoomScreen(),
     ),
     GoRoute(
       path: RoutePaths.operator,
@@ -94,6 +126,7 @@ final appRouter = GoRouter(
           const CommenterScreen(),
     ),
   ],
-  errorBuilder: (context, state) =>
-      Scaffold(body: Center(child: Text('Route not found: ${state.location}'))),
+  errorBuilder: (context, state) => Scaffold(
+    body: Center(child: Text('Route not found: ${state.uri.toString()}')),
+  ),
 );

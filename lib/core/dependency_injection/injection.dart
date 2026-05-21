@@ -11,6 +11,7 @@
 
 import 'package:get_it/get_it.dart';
 import '../socket/socket_service.dart';
+import '../../features/recorder/cubit/recorder_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -49,9 +50,8 @@ Future<void> setupDependencies() async {
   // ============================================
 
   // Recorder Cubit - manages recorder local state
-  // getIt.registerSingleton<RecorderCubit>(
-  //   RecorderCubit(),
-  // );
+  // Provide a factory so callers (screens) receive a fresh cubit instance
+  getIt.registerFactory<RecorderCubit>(() => RecorderCubit());
 }
 
 /// Clean up resources

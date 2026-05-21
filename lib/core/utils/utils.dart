@@ -1,26 +1,18 @@
-/// Utility Functions
-///
-/// Responsibility:
-/// - Provide helper functions
-/// - Common utilities used across the application
-/// - Format and validation utilities
+// Utility Functions
+//
+// Responsibility:
+// - Provide helper functions
+// - Common utilities used across the application
+// - Format and validation utilities
 
-/// Logger utility for debugging
-class Logger {
-  static void info(String message) {
-    print('[INFO] $message');
-  }
+import '../log/logger.dart';
 
-  static void warning(String message) {
-    print('[WARNING] $message');
-  }
-
-  static void error(String message, [StackTrace? stackTrace]) {
-    print('[ERROR] $message');
-    if (stackTrace != null) {
-      print(stackTrace);
-    }
-  }
+// Logger utility for debugging that delegates to AppLogger
+class AppUtilsLogger {
+  static void info(String message) => AppLogger.i('[INFO] $message');
+  static void warning(String message) => AppLogger.w('[WARNING] $message');
+  static void error(String message, [StackTrace? stackTrace]) =>
+      AppLogger.e('[ERROR] $message', null, stackTrace);
 }
 
 /// Formatter utilities

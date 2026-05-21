@@ -8,7 +8,7 @@
 import 'package:flutter/material.dart';
 
 class OperatorScreen extends StatelessWidget {
-  const OperatorScreen({Key? key}) : super(key: key);
+  const OperatorScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
