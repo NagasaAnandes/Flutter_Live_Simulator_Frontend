@@ -11,6 +11,8 @@
 
 import 'package:get_it/get_it.dart';
 import '../socket/socket_service.dart';
+import '../../features/operator/bloc/operator_bloc.dart';
+import '../../features/operator/repository/operator_repository.dart';
 import '../../features/recorder/cubit/recorder_cubit.dart';
 
 final getIt = GetIt.instance;
@@ -26,6 +28,11 @@ Future<void> setupDependencies() async {
 
   // Socket Service - singleton for realtime communication
   getIt.registerSingleton<SocketService>(SocketService());
+
+  // Operator Repository - socket-backed control channel
+  getIt.registerSingleton<OperatorRepository>(
+    OperatorRepository(socketService: getIt<SocketService>()),
+  );
 
   // ============================================
   // Repositories
@@ -51,7 +58,14 @@ Future<void> setupDependencies() async {
 
   // Recorder Cubit - manages recorder local state
   // Provide a factory so callers (screens) receive a fresh cubit instance
-  getIt.registerFactory<RecorderCubit>(() => RecorderCubit());
+  getIt.registerFactory<RecorderCubit>(
+    () => RecorderCubit(socketService: getIt<SocketService>()),
+  );
+
+  // Operator Bloc - route-scoped control orchestration
+  getIt.registerFactory<OperatorBloc>(
+    () => OperatorBloc(repository: getIt<OperatorRepository>()),
+  );
 }
 
 /// Clean up resources

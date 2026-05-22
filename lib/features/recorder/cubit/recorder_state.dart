@@ -19,6 +19,8 @@ class RecorderReady extends RecorderState {
   final bool overlaysVisible;
   final List<CommentOverlayItem> comments;
   final String statusText;
+  final ProductOverlay? activeProduct;
+  final DiscountOverlay? activeDiscount;
 
   const RecorderReady({
     this.controller,
@@ -26,7 +28,11 @@ class RecorderReady extends RecorderState {
     this.overlaysVisible = true,
     this.comments = const [],
     this.statusText = 'Ready',
+    this.activeProduct,
+    this.activeDiscount,
   });
+
+  static const Object _valueUnset = Object();
 
   RecorderReady copyWith({
     CameraController? controller,
@@ -34,6 +40,8 @@ class RecorderReady extends RecorderState {
     bool? overlaysVisible,
     List<CommentOverlayItem>? comments,
     String? statusText,
+    Object? activeProduct = _valueUnset,
+    Object? activeDiscount = _valueUnset,
   }) {
     return RecorderReady(
       controller: controller ?? this.controller,
@@ -41,6 +49,12 @@ class RecorderReady extends RecorderState {
       overlaysVisible: overlaysVisible ?? this.overlaysVisible,
       comments: comments ?? this.comments,
       statusText: statusText ?? this.statusText,
+      activeProduct: identical(activeProduct, _valueUnset)
+          ? this.activeProduct
+          : activeProduct as ProductOverlay?,
+      activeDiscount: identical(activeDiscount, _valueUnset)
+          ? this.activeDiscount
+          : activeDiscount as DiscountOverlay?,
     );
   }
 }

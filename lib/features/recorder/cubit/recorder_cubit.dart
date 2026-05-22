@@ -1,17 +1,28 @@
 import 'dart:async';
 
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/log/logger.dart';
+import '../../../core/socket/socket_service.dart';
+import '../../../shared/models/overlay_models.dart';
 
 part 'recorder_state.dart';
 
 class RecorderCubit extends Cubit<RecorderState> with WidgetsBindingObserver {
-  RecorderCubit() : super(const RecorderInitial()) {
+  final SocketService _socketService;
+  StreamSubscription<SocketConnectionStatus>? _socketStatusSub;
+  bool _socketListenersAttached = false;
+
+  RecorderCubit({required SocketService socketService})
+    : _socketService = socketService,
+      super(const RecorderInitial()) {
     WidgetsBinding.instance.addObserver(this);
+    _socketStatusSub = _socketService.connectionStatusStream.listen(
+      _onSocketStatusChanged,
+    );
+    _attachSocketListeners();
   }
 
   final List<CameraDescription> _available = [];
@@ -22,6 +33,30 @@ class RecorderCubit extends Cubit<RecorderState> with WidgetsBindingObserver {
   bool _initializing = false;
   bool _disposed = false;
   int _sessionToken = 0;
+
+  void _attachSocketListeners() {
+    if (_socketListenersAttached) {
+      return;
+    }
+
+    _socketListenersAttached = true;
+
+    _socketService.on('SHOW_PRODUCT', (data) {
+      _handleShowProduct(data);
+    });
+
+    _socketService.on('CLEAR_PRODUCT', (data) {
+      _handleClearProduct(data);
+    });
+
+    _socketService.on('START_DISCOUNT', (data) {
+      _handleStartDiscount(data);
+    });
+
+    _socketService.on('STOP_DISCOUNT', (data) {
+      _handleStopDiscount(data);
+    });
+  }
 
   Future<void> initialize() async {
     if (_disposed || _initializing) {
@@ -203,6 +238,135 @@ class RecorderCubit extends Cubit<RecorderState> with WidgetsBindingObserver {
     }
   }
 
+  void _onSocketStatusChanged(SocketConnectionStatus status) {
+    final current = state;
+    if (current is! RecorderReady || _disposed) {
+      return;
+    }
+
+    switch (status) {
+      case SocketConnectionStatus.connected:
+        emit(current.copyWith(statusText: 'Ready'));
+        break;
+      case SocketConnectionStatus.reconnecting:
+        emit(current.copyWith(statusText: 'Reconnecting control link'));
+        break;
+      case SocketConnectionStatus.disconnected:
+        emit(current.copyWith(statusText: 'Socket disconnected'));
+        break;
+      case SocketConnectionStatus.connecting:
+        emit(current.copyWith(statusText: 'Connecting...'));
+        break;
+      case SocketConnectionStatus.error:
+        emit(current.copyWith(statusText: 'Socket error'));
+        break;
+    }
+  }
+
+  void _handleShowProduct(dynamic data) {
+    final current = state;
+    if (current is! RecorderReady || _disposed) {
+      return;
+    }
+
+    final payload = _asMap(data);
+    final productPayload = _asMap(payload['product'] ?? payload);
+    final name =
+        productPayload['name']?.toString() ??
+        payload['productName']?.toString() ??
+        'Product';
+
+    final priceValue = productPayload['price'] ?? payload['price'];
+    final price = priceValue is num
+        ? priceValue.toDouble()
+        : double.tryParse(priceValue?.toString() ?? '') ?? 0.0;
+
+    emit(
+      current.copyWith(
+        activeProduct: ProductOverlay(
+          productId:
+              productPayload['id']?.toString() ??
+              payload['productId']?.toString() ??
+              name,
+          name: name,
+          price: price,
+          imageUrl:
+              productPayload['imageUrl']?.toString() ??
+              payload['imageUrl']?.toString() ??
+              '',
+          description:
+              productPayload['category']?.toString() ??
+              payload['category']?.toString() ??
+              'Live product',
+          stock: 0,
+          displayedAt: DateTime.now(),
+        ),
+        statusText: 'Showing $name',
+      ),
+    );
+  }
+
+  void _handleClearProduct(dynamic data) {
+    final current = state;
+    if (current is! RecorderReady || _disposed) {
+      return;
+    }
+
+    emit(current.copyWith(activeProduct: null, statusText: 'Product cleared'));
+  }
+
+  void _handleStartDiscount(dynamic data) {
+    final current = state;
+    if (current is! RecorderReady || _disposed) {
+      return;
+    }
+
+    final payload = _asMap(data);
+    final title = payload['title']?.toString() ?? 'Discount';
+    final percentageValue = payload['discountPercentage'];
+    final percentage = percentageValue is num
+        ? percentageValue.toDouble()
+        : double.tryParse(percentageValue?.toString() ?? '') ?? 0.0;
+
+    emit(
+      current.copyWith(
+        activeDiscount: DiscountOverlay(
+          discountId: payload['discountId']?.toString() ?? title,
+          title: title,
+          discountPercentage: percentage,
+          startsAt: DateTime.now(),
+          expiresAt: DateTime.now().add(const Duration(minutes: 5)),
+          usageLimit: 9999,
+          usageCount: 0,
+        ),
+        statusText: percentage > 0 ? '$title live' : title,
+      ),
+    );
+  }
+
+  void _handleStopDiscount(dynamic data) {
+    final current = state;
+    if (current is! RecorderReady || _disposed) {
+      return;
+    }
+
+    emit(
+      current.copyWith(activeDiscount: null, statusText: 'Discount stopped'),
+    );
+  }
+
+  Map<String, dynamic> _asMap(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return data;
+    }
+
+    if (data is Map) {
+      return data.map((key, value) => MapEntry(key.toString(), value));
+    }
+
+    return <String, dynamic>{};
+  }
+
   void addComment(String text) {
     final current = state;
     if (current is! RecorderReady || _disposed) {
@@ -311,6 +475,7 @@ class RecorderCubit extends Cubit<RecorderState> with WidgetsBindingObserver {
   Future<void> close() async {
     _disposed = true;
     WidgetsBinding.instance.removeObserver(this);
+    await _socketStatusSub?.cancel();
 
     for (final timer in _commentTimers) {
       timer.cancel();
@@ -327,6 +492,13 @@ class RecorderCubit extends Cubit<RecorderState> with WidgetsBindingObserver {
         AppLogger.w('[Recorder] controller dispose warning: $error');
       }
     }
+
+    try {
+      _socketService.off('SHOW_PRODUCT');
+      _socketService.off('CLEAR_PRODUCT');
+      _socketService.off('START_DISCOUNT');
+      _socketService.off('STOP_DISCOUNT');
+    } catch (_) {}
 
     return super.close();
   }

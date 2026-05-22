@@ -7,15 +7,64 @@ abstract class OperatorEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadOperatorDataEvent extends OperatorEvent {
-  const LoadOperatorDataEvent();
-}
+class OperatorStarted extends OperatorEvent {
+  final String roomCode;
 
-class UpdateOperatorStateEvent extends OperatorEvent {
-  final Map<String, dynamic> data;
-
-  const UpdateOperatorStateEvent(this.data);
+  const OperatorStarted({required this.roomCode});
 
   @override
-  List<Object?> get props => [data];
+  List<Object?> get props => [roomCode];
+}
+
+class OperatorRoomCodeUpdated extends OperatorEvent {
+  final String roomCode;
+
+  const OperatorRoomCodeUpdated({required this.roomCode});
+
+  @override
+  List<Object?> get props => [roomCode];
+}
+
+class OperatorProductSelected extends OperatorEvent {
+  final OperatorProduct product;
+
+  const OperatorProductSelected({required this.product});
+
+  @override
+  List<Object?> get props => [product];
+}
+
+class OperatorProductCleared extends OperatorEvent {
+  const OperatorProductCleared();
+}
+
+class OperatorDiscountTriggered extends OperatorEvent {
+  final OperatorDiscountPreset preset;
+
+  const OperatorDiscountTriggered({required this.preset});
+
+  @override
+  List<Object?> get props => [preset];
+}
+
+class OperatorDiscountStopped extends OperatorEvent {
+  const OperatorDiscountStopped();
+}
+
+class OperatorConnectionStatusChanged extends OperatorEvent {
+  final SocketConnectionStatus status;
+
+  const OperatorConnectionStatusChanged(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}
+
+class OperatorSyncLost extends OperatorEvent {
+  final String message;
+
+  const OperatorSyncLost(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }

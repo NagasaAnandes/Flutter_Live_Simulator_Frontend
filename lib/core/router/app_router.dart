@@ -13,6 +13,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dependency_injection/injection.dart';
+import '../../features/operator/bloc/operator_bloc.dart';
+import '../../features/operator/screens/operator_screen.dart';
 import '../../features/room/screens/waiting_room_screen.dart';
 import '../../features/recorder/screens/recorder_screen.dart';
 import '../../features/recorder/cubit/recorder_cubit.dart';
@@ -32,7 +34,8 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           ElevatedButton(
-            onPressed: () => context.go('/operator'),
+            onPressed: () =>
+                context.go('${RoutePaths.operator}?roomCode=ROOM-1001'),
             child: const Text('Operator'),
           ),
           const SizedBox(height: 8),
@@ -44,15 +47,6 @@ class HomeScreen extends StatelessWidget {
       ),
     ),
   );
-}
-
-// RecorderScreen is provided by the Recorder feature implementation.
-
-class OperatorScreen extends StatelessWidget {
-  const OperatorScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Operator Screen')));
 }
 
 class CommenterScreen extends StatelessWidget {
@@ -116,8 +110,18 @@ final appRouter = GoRouter(
     GoRoute(
       path: RoutePaths.operator,
       name: 'operator',
-      builder: (BuildContext context, GoRouterState state) =>
-          const OperatorScreen(),
+      builder: (BuildContext context, GoRouterState state) {
+        final roomCode =
+            state.uri.queryParameters['roomCode']?.trim().isNotEmpty == true
+            ? state.uri.queryParameters['roomCode']!.trim()
+            : 'ROOM-1001';
+
+        return BlocProvider<OperatorBloc>(
+          create: (_) =>
+              getIt<OperatorBloc>()..add(OperatorStarted(roomCode: roomCode)),
+          child: const OperatorScreen(),
+        );
+      },
     ),
     GoRoute(
       path: RoutePaths.commenter,
