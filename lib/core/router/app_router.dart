@@ -13,6 +13,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dependency_injection/injection.dart';
+import '../../features/commenter/bloc/commenter_bloc.dart';
+import '../../features/commenter/screens/commenter_screen.dart';
 import '../../features/operator/bloc/operator_bloc.dart';
 import '../../features/operator/screens/operator_screen.dart';
 import '../../features/room/screens/waiting_room_screen.dart';
@@ -47,13 +49,6 @@ class HomeScreen extends StatelessWidget {
       ),
     ),
   );
-}
-
-class CommenterScreen extends StatelessWidget {
-  const CommenterScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Commenter Screen')));
 }
 
 class JoinRoomScreen extends StatelessWidget {
@@ -126,8 +121,18 @@ final appRouter = GoRouter(
     GoRoute(
       path: RoutePaths.commenter,
       name: 'commenter',
-      builder: (BuildContext context, GoRouterState state) =>
-          const CommenterScreen(),
+      builder: (BuildContext context, GoRouterState state) {
+        final roomCode =
+            state.uri.queryParameters['roomCode']?.trim().isNotEmpty == true
+            ? state.uri.queryParameters['roomCode']!.trim()
+            : 'ROOM-1001';
+
+        return BlocProvider<CommenterBloc>(
+          create: (_) =>
+              getIt<CommenterBloc>()..add(CommenterStarted(roomCode: roomCode)),
+          child: const CommenterScreen(),
+        );
+      },
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

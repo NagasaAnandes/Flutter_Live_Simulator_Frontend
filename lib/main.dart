@@ -21,7 +21,6 @@ import 'core/router/app_router.dart';
 import 'core/socket/socket_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/room/bloc/room_bloc.dart';
-import 'features/commenter/bloc/commenter_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,7 +77,6 @@ class MyApp extends StatelessWidget {
       providers: [
         // BLoCs - Feature orchestration with socket sync
         BlocProvider<RoomBloc>(create: (context) => RoomBloc()),
-        BlocProvider<CommenterBloc>(create: (context) => CommenterBloc()),
       ],
       child: MaterialApp.router(
         title: AppConstants.appName,

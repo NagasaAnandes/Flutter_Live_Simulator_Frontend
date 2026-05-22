@@ -15,7 +15,6 @@ import 'package:equatable/equatable.dart';
 
 import '../../../core/dependency_injection/injection.dart';
 import '../../../core/socket/socket_service.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../room/models/room_models.dart';
 import '../../../shared/enums/enums.dart';
 
@@ -53,7 +52,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
     );
     on<SocketReconnectingReceived>(
       (event, emit) =>
-          _onSocketStatusChanged(ConnectionStatus.disconnected, emit),
+          _onSocketStatusChanged(ConnectionStatus.connecting, emit),
     );
 
     // subscribe to socket connection status stream

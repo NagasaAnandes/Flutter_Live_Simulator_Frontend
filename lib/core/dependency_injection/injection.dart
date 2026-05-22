@@ -11,6 +11,8 @@
 
 import 'package:get_it/get_it.dart';
 import '../socket/socket_service.dart';
+import '../../features/commenter/bloc/commenter_bloc.dart';
+import '../../features/commenter/repository/commenter_repository.dart';
 import '../../features/operator/bloc/operator_bloc.dart';
 import '../../features/operator/repository/operator_repository.dart';
 import '../../features/recorder/cubit/recorder_cubit.dart';
@@ -32,6 +34,11 @@ Future<void> setupDependencies() async {
   // Operator Repository - socket-backed control channel
   getIt.registerSingleton<OperatorRepository>(
     OperatorRepository(socketService: getIt<SocketService>()),
+  );
+
+  // Commenter Repository - socket-backed audience simulator
+  getIt.registerSingleton<CommenterRepository>(
+    CommenterRepository(socketService: getIt<SocketService>()),
   );
 
   // ============================================
@@ -65,6 +72,11 @@ Future<void> setupDependencies() async {
   // Operator Bloc - route-scoped control orchestration
   getIt.registerFactory<OperatorBloc>(
     () => OperatorBloc(repository: getIt<OperatorRepository>()),
+  );
+
+  // Commenter Bloc - route-scoped audience simulation orchestration
+  getIt.registerFactory<CommenterBloc>(
+    () => CommenterBloc(repository: getIt<CommenterRepository>()),
   );
 }
 

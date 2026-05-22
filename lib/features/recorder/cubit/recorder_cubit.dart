@@ -14,6 +14,11 @@ class RecorderCubit extends Cubit<RecorderState> with WidgetsBindingObserver {
   final SocketService _socketService;
   StreamSubscription<SocketConnectionStatus>? _socketStatusSub;
   bool _socketListenersAttached = false;
+  late final SocketEventCallback _showProductListener;
+  late final SocketEventCallback _clearProductListener;
+  late final SocketEventCallback _startDiscountListener;
+  late final SocketEventCallback _stopDiscountListener;
+  late final SocketEventCallback _triggerCommentListener;
 
   RecorderCubit({required SocketService socketService})
     : _socketService = socketService,
@@ -22,6 +27,11 @@ class RecorderCubit extends Cubit<RecorderState> with WidgetsBindingObserver {
     _socketStatusSub = _socketService.connectionStatusStream.listen(
       _onSocketStatusChanged,
     );
+    _showProductListener = _handleShowProduct;
+    _clearProductListener = _handleClearProduct;
+    _startDiscountListener = _handleStartDiscount;
+    _stopDiscountListener = _handleStopDiscount;
+    _triggerCommentListener = _handleTriggerComment;
     _attachSocketListeners();
   }
 
@@ -41,21 +51,15 @@ class RecorderCubit extends Cubit<RecorderState> with WidgetsBindingObserver {
 
     _socketListenersAttached = true;
 
-    _socketService.on('SHOW_PRODUCT', (data) {
-      _handleShowProduct(data);
-    });
+    _socketService.on('SHOW_PRODUCT', _showProductListener);
 
-    _socketService.on('CLEAR_PRODUCT', (data) {
-      _handleClearProduct(data);
-    });
+    _socketService.on('CLEAR_PRODUCT', _clearProductListener);
 
-    _socketService.on('START_DISCOUNT', (data) {
-      _handleStartDiscount(data);
-    });
+    _socketService.on('START_DISCOUNT', _startDiscountListener);
 
-    _socketService.on('STOP_DISCOUNT', (data) {
-      _handleStopDiscount(data);
-    });
+    _socketService.on('STOP_DISCOUNT', _stopDiscountListener);
+
+    _socketService.on('TRIGGER_COMMENT', _triggerCommentListener);
   }
 
   Future<void> initialize() async {
@@ -355,6 +359,70 @@ class RecorderCubit extends Cubit<RecorderState> with WidgetsBindingObserver {
     );
   }
 
+  void _handleTriggerComment(dynamic data) {
+    final current = state;
+    if (current is! RecorderReady || _disposed) {
+      return;
+    }
+
+    final payload = _asMap(data);
+    final text = _commentTextFromPayload(payload);
+    if (text.isEmpty) {
+      return;
+    }
+
+    addComment(text);
+  }
+
+  String _commentTextFromPayload(Map<String, dynamic> payload) {
+    final message =
+        payload['message']?.toString().trim() ??
+        payload['text']?.toString().trim() ??
+        payload['template']?.toString().trim() ??
+        payload['comment']?.toString().trim() ??
+        '';
+
+    final username =
+        payload['userName']?.toString().trim() ??
+        payload['username']?.toString().trim() ??
+        payload['displayName']?.toString().trim() ??
+        '';
+
+    if (username.isNotEmpty && message.isNotEmpty) {
+      return '$username: $message';
+    }
+
+    if (message.isNotEmpty) {
+      return message;
+    }
+
+    final category = payload['category']?.toString().trim() ?? '';
+    if (category.isNotEmpty) {
+      return _fallbackCommentText(category);
+    }
+
+    return '';
+  }
+
+  String _fallbackCommentText(String category) {
+    switch (category.toUpperCase()) {
+      case 'PRICE':
+        return 'Is this price final?';
+      case 'HYPE':
+        return 'This live is going crazy!';
+      case 'DISCOUNT':
+        return 'Need more discount details!';
+      case 'STOCK':
+        return 'How much stock is left?';
+      case 'COD':
+        return 'Can I pay cash on delivery?';
+      case 'CHECKOUT':
+        return 'Ready to checkout now.';
+      default:
+        return category;
+    }
+  }
+
   Map<String, dynamic> _asMap(dynamic data) {
     if (data is Map<String, dynamic>) {
       return data;
@@ -494,10 +562,11 @@ class RecorderCubit extends Cubit<RecorderState> with WidgetsBindingObserver {
     }
 
     try {
-      _socketService.off('SHOW_PRODUCT');
-      _socketService.off('CLEAR_PRODUCT');
-      _socketService.off('START_DISCOUNT');
-      _socketService.off('STOP_DISCOUNT');
+      _socketService.off('SHOW_PRODUCT', _showProductListener);
+      _socketService.off('CLEAR_PRODUCT', _clearProductListener);
+      _socketService.off('START_DISCOUNT', _startDiscountListener);
+      _socketService.off('STOP_DISCOUNT', _stopDiscountListener);
+      _socketService.off('TRIGGER_COMMENT', _triggerCommentListener);
     } catch (_) {}
 
     return super.close();
